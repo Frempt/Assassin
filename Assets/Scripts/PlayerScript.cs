@@ -6,14 +6,13 @@ public class PlayerScript : MonoBehaviour
     public Vector2 velocity;
     public float decelerationFactor = 0.9f;
     public float maxHorizontalSpeed = 8.0f;
-    public float attackTimer = 0.0f;
-    public float attackDelay = 1.0f;
-    public float attackDistance = 2.0f;
     public bool isGrounded = false;
     public bool isRooted = false;
 
     public bool atDoor = false;
     public bool atGrabPoint = false;
+    public bool atTeleporter = false;
+    public GameObject proxyTeleporter;
     public GameObject proxyGrabPoint;
     public GameObject proxyDoor;
 
@@ -41,7 +40,7 @@ public class PlayerScript : MonoBehaviour
         animState = animator.GetCurrentAnimatorStateInfo(0);
 
         //work out x axis movement
-        if (!animState.IsName("Attacking") && !isRooted)
+        if (!isRooted)
         {
             if (Input.GetAxis("Horizontal") != 0.0f)
             {
@@ -81,34 +80,12 @@ public class PlayerScript : MonoBehaviour
         }
 
         //work out y axis movement
-        if (!animState.IsName("isAttacking") && isGrounded && !isRooted)
+        if (isGrounded && !isRooted)
         {
             if (Input.GetButtonDown("Jump"))
             {
                 rigidbody2D.AddForce(new Vector2(0.0f, 10000.0f));
             }
-        }
-
-        animator.SetBool("isAttacking", false);
-
-        //player attack
-        if (Input.GetButtonDown("Fire1") && !isRooted)
-        {
-            //if the attack isn't cooling down and the player isn't falling
-            if (attackTimer >= attackDelay)
-            {
-                //start attack animation
-                animator.SetBool("isAttacking", true);
-
-                //add some attack momentum
-                velocity.x = maxHorizontalSpeed * facingDirection.x;
-            }
-        }
-
-        //increment the attack cooldown timer
-        if (attackTimer < attackDelay)
-        {
-            attackTimer += Time.deltaTime;
         }
 
         //allow for player interactions
@@ -120,6 +97,16 @@ public class PlayerScript : MonoBehaviour
                 //move the player to the door's exit
                 Vector2 newPosition = proxyDoor.GetComponent<DoorScript>().exit.transform.position;
                 transform.position = newPosition;
+            }
+
+            //if the player is at a teleporter
+            if (atTeleporter)
+            {
+                //set the animation to phase out
+                animator.SetBool("isPhasing", true);
+
+                //prevent the player from moving
+                isRooted = true;
             }
 
             //if the player is at a grab point and is not grounded
@@ -144,6 +131,31 @@ public class PlayerScript : MonoBehaviour
             }
         }
 
+        //allow the player to select a teleporter
+        if (animState.IsName("PhasingOut"))
+        {
+            //if the player left clicks
+            if (Input.GetMouseButtonDown(0))
+            {
+                //get the objects at the mouse point
+                Collider2D[] colliders = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+
+                //iterate through the colliders
+                foreach (Collider2D other in colliders)
+                {
+                    //if the player has clicked a teleporter of the correct colour, set his position to that teleporter and begin phasing in
+                    if (other.tag == "Teleporter")
+                    {
+                        if (other.GetComponent<TeleportNodeScript>().colour == proxyTeleporter.GetComponent<TeleportNodeScript>().colour)
+                        {
+                            transform.position = other.transform.position;
+                            animator.SetBool("isTeleporting", true);
+                        }
+                    }
+                }
+            }
+        }
+
         //update the animation
         if (velocity.x != 0.0f)
         {
@@ -154,9 +166,29 @@ public class PlayerScript : MonoBehaviour
             animator.SetBool("isMoving", false);
         }
 
+        //update the music
+        UpdateMusic();
+
         //update the player's location
-        rigidbody2D.velocity = velocity;
+        if(!isRooted) rigidbody2D.velocity = velocity;
         transform.rotation = Quaternion.identity;
+    }
+
+    //make the player tangible
+    public void PhaseIn()
+    {
+        collider2D.enabled = true;
+        rigidbody2D.gravityScale = gravityScale;
+        isRooted = false;
+        animator.SetBool("isTeleporting", false);
+    }
+
+    //make the player untangible
+    public void PhaseOut()
+    {
+        collider2D.enabled = false;
+        rigidbody2D.gravityScale = 0.0f;
+        animator.SetBool("isPhasing", false);
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -173,31 +205,7 @@ public class PlayerScript : MonoBehaviour
 
         if (collision.gameObject.tag == "Enemy")
         {
-            Vector2 collisionDirection = collision.transform.position - transform.position;
-            collisionDirection.y = 0.0f;
-            collisionDirection.Normalize();
-
-            if (animState.IsName("Attacking") && collisionDirection == facingDirection)
-            {
-                //kill enemy
-                collision.gameObject.GetComponent<EnemyScript>().Die();
-            }
-        }
-    }
-
-    void OnCollisionStay2D(Collision2D collision)
-    {
-        if (collision.gameObject.tag == "Enemy")
-        {
-            Vector2 collisionDirection = collision.transform.position - transform.position;
-            collisionDirection.y = 0.0f;
-            collisionDirection.Normalize();
-
-            if (animState.IsName("Attacking") && collisionDirection == facingDirection)
-            {
-                //kill enemy
-                collision.gameObject.GetComponent<EnemyScript>().Die();
-            }
+            //TODO: alert enemy
         }
     }
 
@@ -211,6 +219,7 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    //change which direction the character is facing
     public void FaceRight(bool facingRight)
     {
         if (facingRight && transform.localScale.x < 0.0f)
@@ -230,7 +239,28 @@ public class PlayerScript : MonoBehaviour
 
     public void Die()
     {
-        //todo: add player death
+        //TODO: add player death
         animator.SetBool("isDying", true);
+    }
+
+    //update the music
+    public void UpdateMusic()
+    {
+        //get the enemies
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+        //create a distance with the maximum distance
+        float distance = MusicScript.instance.maximumEnemyDistance;
+
+        //check if any enemies are closer
+        foreach (GameObject enemy in enemies)
+        {
+            Vector2 thisDistance = enemy.transform.position - transform.position;
+
+            if (thisDistance.magnitude < distance) distance = thisDistance.magnitude;
+        }
+
+        //set the distance to that of the closest enemy
+        MusicScript.instance.enemyDistance = distance;
     }
 }

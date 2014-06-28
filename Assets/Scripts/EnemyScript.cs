@@ -4,7 +4,7 @@ using System.Collections;
 public class EnemyScript : MonoBehaviour
 {
     public GameObject bulletPrefab;
-    public float bulletSpawnDistance = 2.0f;
+    public Vector2 bulletSpawnPosition = new Vector2(2.0f, 2.0f);
     public float bulletVelocity = 20.0f;
 
     public Transform[] patrolPoints;
@@ -19,7 +19,7 @@ public class EnemyScript : MonoBehaviour
     private float searchTimer = 0.0f;
     private float searchDelay = 5.0f;
 
-    private enum EnemyState { PATROLLING = 0, SEARCHING = 1, ATTACKING = 2, DEAD = 3 };
+    private enum EnemyState { PATROLLING = 0, SEARCHING = 1, ATTACKING = 2};
     private EnemyState state = EnemyState.PATROLLING;
 
     // Use this for initialization
@@ -87,7 +87,7 @@ public class EnemyScript : MonoBehaviour
                         }
                         else
                         {
-                            patrolIndex--;
+                            patrolIndex = 0;
                             target = patrolPoints[patrolIndex].position;
                         }
                     }
@@ -136,13 +136,6 @@ public class EnemyScript : MonoBehaviour
                 transform.rotation = Quaternion.identity;
                 break;
 
-            case EnemyState.DEAD:
-
-                animator.SetBool("isDying", true);
-
-                transform.rotation = Quaternion.identity;
-                break;
-
             default:
                 transform.rotation = Quaternion.identity;
                 break;
@@ -160,12 +153,20 @@ public class EnemyScript : MonoBehaviour
 
     public void ShootBullet()
     {
-        GameObject newBullet = (GameObject)GameObject.Instantiate(bulletPrefab, transform.position + ((Vector3)target-transform.position).normalized * bulletSpawnDistance, Quaternion.identity);
-        newBullet.rigidbody2D.velocity = (target - (Vector2)transform.position).normalized * bulletVelocity;
+        if (target.x < transform.position.x)
+        {
+            if (bulletSpawnPosition.x > 0.0f) bulletSpawnPosition.x *= -1.0f;
+        }
 
-        Debug.Log("shot bullet");
+        if (target.x > transform.position.x)
+        {
+            if (bulletSpawnPosition.x < 0.0f) bulletSpawnPosition.x *= -1.0f;
+        }
+        GameObject newBullet = (GameObject)GameObject.Instantiate(bulletPrefab, transform.position + (Vector3)bulletSpawnPosition, Quaternion.identity);
+        newBullet.rigidbody2D.velocity = (target - (Vector2)transform.position).normalized * bulletVelocity;
     }
 
+    //update the direction the character is facing
     public void FaceRight(bool facingRight)
     {
         if (facingRight && transform.localScale.x < 0.0f)
@@ -181,10 +182,5 @@ public class EnemyScript : MonoBehaviour
             scale.x *= -1;
             transform.localScale = scale;
         }
-    }
-
-    public void Die()
-    {
-        Destroy(gameObject);
     }
 }
