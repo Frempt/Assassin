@@ -10,6 +10,12 @@ public class BulletScript : MonoBehaviour
             collision.gameObject.GetComponent<PlayerScript>().Die();
         }
 
+        if (collision.collider.tag == "Objective")
+        {
+            Debug.Log("Objective hit");
+            collision.collider.GetComponent<ObjectiveScript>().Seeded();
+        }
+
         Die();
     }
 

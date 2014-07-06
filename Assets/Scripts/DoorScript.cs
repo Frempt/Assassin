@@ -29,6 +29,17 @@ public class DoorScript : MonoBehaviour
         }
     }
 
+    void OnTriggerStay2D(Collider2D collider)
+    {
+        if (collider.tag == "Player")
+        {
+            PlayerScript player = collider.GetComponent<PlayerScript>();
+
+            player.atDoor = true;
+            player.proxyDoor = gameObject;
+        }
+    }
+
     void OnTriggerExit2D(Collider2D collider)
     {
         if (collider.tag == "Player")

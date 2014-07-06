@@ -11,19 +11,21 @@ public class EnemyScript : MonoBehaviour
 
     public float maxHorizontalSpeed = 5.0f;
 
-    private Animator animator;
+    public LayerMask visionIgnoreMask;
 
-    private int patrolIndex = 0;
-    private Vector2 target = Vector3.zero;
+    protected Animator animator;
 
-    private float searchTimer = 0.0f;
-    private float searchDelay = 5.0f;
+    protected int patrolIndex = 0;
+    protected Vector2 target = Vector3.zero;
 
-    private enum EnemyState { PATROLLING = 0, SEARCHING = 1, ATTACKING = 2};
-    private EnemyState state = EnemyState.PATROLLING;
+    protected float searchTimer = 0.0f;
+    protected float searchDelay = 5.0f;
+
+    protected enum EnemyState { PATROLLING = 0, SEARCHING = 1, ATTACKING = 2, ROOTED = 3};
+    protected EnemyState state = EnemyState.PATROLLING;
 
     // Use this for initialization
-    void Start()
+    public void Start()
     {
         if (patrolPoints[0])
         {
@@ -34,7 +36,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
         //set movement direction
         target.y = transform.position.y;
@@ -45,30 +47,29 @@ public class EnemyScript : MonoBehaviour
         animator.SetBool("isShooting", false);
         animator.SetBool("isMoving", false);
 
-        //look for player
-        bool playerFound = false;
-        RaycastHit2D[] hitInfo = Physics2D.RaycastAll(transform.position, (target - (Vector2)transform.position).normalized, 4000.0f);
-        foreach (RaycastHit2D ray in hitInfo)
+        if (state != EnemyState.ROOTED)
         {
-            if (ray)
+            //look for player
+            bool playerFound = false;
+            RaycastHit2D hitInfo = Physics2D.Raycast(transform.position, (target - (Vector2)transform.position).normalized, 4000.0f, ~visionIgnoreMask);
+            if (hitInfo)
             {
                 //if the player is in sight, start shooting
-                if (ray.collider.tag == "Player")
+                if (hitInfo.collider.tag == "Player")
                 {
                     state = EnemyState.ATTACKING;
-                    target = ray.transform.position;
+                    target = hitInfo.transform.position;
                     playerFound = true;
                     animator.SetBool("isShooting", true);
-                    break;
                 }
             }
-        }
 
-        //if the player isn't in sight, search for them
-        if (!playerFound && state == EnemyState.ATTACKING)
-        {
-            state = EnemyState.SEARCHING;
-            target = patrolPoints[patrolIndex].position;
+            //if the player isn't in sight, search for them
+            if (!playerFound && state == EnemyState.ATTACKING)
+            {
+                state = EnemyState.SEARCHING;
+                target = patrolPoints[patrolIndex].position;
+            }
         }
 
         //state based behaviours
@@ -133,6 +134,12 @@ public class EnemyScript : MonoBehaviour
 
                 //attack logic primarily carried out by animator
                 animator.SetBool("isShooting", true);
+                transform.rotation = Quaternion.identity;
+                break;
+
+            case EnemyState.ROOTED:
+                //enemy rooted state
+                //primarily used by the objective character
                 transform.rotation = Quaternion.identity;
                 break;
 

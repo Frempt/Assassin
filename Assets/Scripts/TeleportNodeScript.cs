@@ -15,6 +15,15 @@ public class TeleportNodeScript : MonoBehaviour
         }
     }
 
+    void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.tag == "Player")
+        {
+            other.GetComponent<PlayerScript>().proxyTeleporter = gameObject;
+            other.GetComponent<PlayerScript>().atTeleporter = true;
+        }
+    }
+
     void OnTriggerExit2D(Collider2D other)
     {
         if (other.tag == "Player")
