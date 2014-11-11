@@ -12,7 +12,6 @@ public class BulletScript : MonoBehaviour
 
         if (collision.collider.tag == "Objective")
         {
-            Debug.Log("Objective hit");
             collision.collider.GetComponent<ObjectiveScript>().Seeded();
         }
 

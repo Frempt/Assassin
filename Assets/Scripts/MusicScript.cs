@@ -7,8 +7,8 @@ public class MusicScript : MonoBehaviour
 
     public AudioSource enemyStem;
 
-    public float enemyDistance;
-    public float maximumEnemyDistance;
+    public float enemyDistance = 100;
+    public float maximumEnemyDistance = 10;
 
 	// Use this for initialization
 	void Start () 
@@ -18,6 +18,8 @@ public class MusicScript : MonoBehaviour
 
         //get the enemy audio source
         enemyStem = GetComponents<AudioSource>()[1];
+        enemyStem.volume = 0.0f;
+        enemyStem.Stop();
 	}
 	
 	// Update is called once per frame
@@ -26,11 +28,15 @@ public class MusicScript : MonoBehaviour
         //if the enemy is close enough to the player, fade in the enemy stem
         if (enemyDistance < maximumEnemyDistance)
         {
-            float factor = 1-(enemyDistance / maximumEnemyDistance);
-
+            float factor = 1 - (enemyDistance / maximumEnemyDistance);
             enemyStem.volume = factor;
             enemyStem.time = audio.time;
             enemyStem.Play();
+        }
+        else
+        {
+            enemyStem.volume = 0.0f;
+            enemyStem.Stop();
         }
 	}
 }

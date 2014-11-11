@@ -6,27 +6,34 @@ public class GameControllerScript : MonoBehaviour
     public static GameControllerScript instance;
 
     public GUISkin skin;
+    public Rect windowRect;
+
+    public GameObject playerPrefab;
 
     private GameObject player;
     private GameObject[] enemies;
 
-    private bool levelComplete;
+    private Vector3 playerStartPosition = Vector3.zero;
+
+    public bool levelComplete;
 
     private float elapsedTime = 0.0f;
     private int deaths = 0;
+    private int score = 5000;
 
 	// Use this for initialization
 	void Start () 
     {
         instance = this;
 
-        GameObject tempPlayer = GameObject.FindGameObjectWithTag("Player");
+        windowRect = new Rect(Screen.width/2, Screen.height/2, Screen.width/6, Screen.height/6);
+        windowRect.x -= windowRect.width / 2;
+        windowRect.y -= windowRect.height / 2;
 
-        player = tempPlayer;
+        player = GameObject.FindGameObjectWithTag("Player");
+        playerStartPosition = player.transform.position;
 
-        GameObject[] tempEnemies = GameObject.FindGameObjectsWithTag("Enemy");
-
-        enemies = tempEnemies;
+        enemies = GameObject.FindGameObjectsWithTag("Enemy");
 	}
 	
 	// Update is called once per frame
@@ -35,12 +42,21 @@ public class GameControllerScript : MonoBehaviour
         //allow the game to exit
         if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
 
-        //if the level is complete, pressing action or jump resets it
+        //update the music
+        UpdateMusic();
+
+        //calculate the score
+        score = 5000;
+        score -= (deaths * 100);
+        score -= (int)(elapsedTime * (10 * (1 + deaths)));
+        if (score < 0) score = 0;
+
+        //if the level is complete, pressing action or jump returns to the menu
         if (levelComplete)
         {
             if (Input.GetButtonDown("Action") || (Input.GetButtonDown("Jump")))
             {
-                ResetLevel();
+                Application.LoadLevel(0);
             }
         }
         else
@@ -54,54 +70,59 @@ public class GameControllerScript : MonoBehaviour
     {
         GUI.skin = skin;
 
-        //display the victory message
-        //TODO: calculate score based on time and number of deaths
         if (levelComplete)
         {
-            GUI.Label(new Rect(Screen.width / 2, Screen.height / 2, 1000, 300), "Victory! Time = " + elapsedTime);
+            //display the level complete GUI
+            GUI.Window(0, windowRect, DoMyWindow, "Level Complete");
+        }
+    }
+
+    public void DoMyWindow(int windowId)
+    {
+        GUIStyle style = new GUIStyle();
+        Vector2 size = style.CalcSize(new GUIContent("You scored: " + score));
+        size.x *= 1.7f;
+        size.y *= 2;
+        GUI.Label(new Rect((windowRect.width/2) - (size.x / 2), (windowRect.height/3) - (size.y / 2), size.x, size.y), "You scored: " + score);
+        
+        if (GUI.Button(new Rect(0, windowRect.height/2, windowRect.width, windowRect.height/2), "Back to Menu"))
+        {
+            Application.LoadLevel(0);
         }
     }
 
     public void LevelComplete()
     {
-        //remove the enemy objects from play
-        foreach (GameObject enemy in enemies)
-        {
-            Destroy(enemy);
-        }
-
-        //remove the player object from play
-        Destroy(player);
-
         //set the level to complete
         levelComplete = true;
+        player.rigidbody2D.velocity = Vector2.zero;
     }
 
     public void ResetLevel()
     {
         //reset the level
-        //TODO: reset enemy and player objects but keep time and number of deaths recorded
+        Destroy(GameObject.FindGameObjectWithTag("Player"));
+        player = (GameObject)GameObject.Instantiate(playerPrefab, playerStartPosition, Quaternion.identity);
 
-        Application.LoadLevel(Application.loadedLevel);
-        
-        /*GameObject tempPlayer = GameObject.FindGameObjectWithTag("Player");
+        //increment the deaths
+        deaths++;
+    }
 
-        Destroy(tempPlayer);
+    //update the music
+    public void UpdateMusic()
+    {
+        //create a distance with the maximum distance
+        float distance = MusicScript.instance.maximumEnemyDistance;
 
-        GameObject[] tempEnemies = GameObject.FindGameObjectsWithTag("Enemy");
-
-        for (int i = 0; i < tempEnemies.Length; i++)
-        {
-            Destroy(tempEnemies[i]);
-        }
-
-        GameObject.Instantiate(player);
-
+        //check if any enemies are closer
         foreach (GameObject enemy in enemies)
         {
-            GameObject.Instantiate(enemy);
+            Vector2 thisDistance = enemy.transform.position - player.transform.position;
+
+            if (thisDistance.magnitude < distance) distance = thisDistance.magnitude;
         }
 
-        deaths++;*/
+        //set the distance to that of the closest enemy
+        MusicScript.instance.enemyDistance = distance;
     }
 }

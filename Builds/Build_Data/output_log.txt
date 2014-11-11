@@ -1,10 +1,10 @@
 Initialize engine version: 4.5.1f3 (73cd57f80e3e)
 GfxDevice: creating device client; threaded=1
 Direct3D:
-    Version:  Direct3D 9.0c [nvd3dum.dll 9.18.13.1422]
+    Version:  Direct3D 9.0c [nvd3dum.dll 9.18.13.4448]
     Renderer: NVIDIA GeForce GTX 560 
     Vendor:   NVIDIA
-    VRAM:     1999 MB (via DXGI)
+    VRAM:     1998 MB (via DXGI)
     Caps:     Shader=30 DepthRT=1 NativeDepth=1 NativeShadow=1 DF16=0 INTZ=1 RAWZ=0 NULL=1 RESZ=0 SlowINTZ=0
 Begin MonoManager ReloadAssembly
 Platform assembly: C:\Users\JC Macgilp\Dropbox\Projects\Alien Invasion\Builds\Build_Data\Managed\UnityEngine.dll (this message is harmless)
@@ -15,33 +15,15 @@ Loading C:\Users\JC Macgilp\Dropbox\Projects\Alien Invasion\Builds\Build_Data\Ma
 desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
 <RI> Initializing input.
 <RI> Input initialized.
-Hit
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+UnloadTime: 0.741075 ms
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
 
-Hit
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+Unloading 2 unused Assets to reduce memory usage. Loaded Objects now: 644.
+Total: 2.781774 ms (FindLiveObjects: 0.085250 ms CreateObjectMapping: 0.060842 ms MarkObjects: 0.636016 ms  DeleteObjects: 0.016625 ms)
 
-Hit
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+UnloadTime: 2.183962 ms
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
 
-Hit
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
-Objective
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
-Objective hit
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
-UnloadTime: 0.541218 ms
-Unloading 2 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
-
-Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 354.
-Total: 0.611258 ms (FindLiveObjects: 0.013795 ms CreateObjectMapping: 0.013442 ms MarkObjects: 0.104706 ms  DeleteObjects: 0.003537 ms)
+Unloading 165 unused Assets to reduce memory usage. Loaded Objects now: 259.
+Total: 5.356968 ms (FindLiveObjects: 0.066148 ms CreateObjectMapping: 0.053767 ms MarkObjects: 0.568806 ms  DeleteObjects: 2.756659 ms)
 

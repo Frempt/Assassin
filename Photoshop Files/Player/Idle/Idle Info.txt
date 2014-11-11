@@ -1,0 +1,9 @@
+Sup James,
+
+These are the idle Animations. "Idle 1" is the same frame as "Walking 1", so that they can work off each other and should look good when going into the different stances. I will put "Idle 1" frame in with the Jumping as well, but as "Jumping 0" as I forgot to add it :P.
+
+"Idle 5" is also the same as "Idle 1" as after "Idle 2-4" play, it resets back to the start. "Idle 2 to 4" are the legs figiting, whereas "Idle 6-8" are the alien "Breathing" (Moving up/down) and again should reset onto "Idle 1"
+
+It is up to you if you want to use the legs moving idle animation, or just the up/down animation. I think it looks better with just the u[/down motion, but you may think different.
+
+Laters!

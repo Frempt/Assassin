@@ -18,10 +18,7 @@ public class EnemyScript : MonoBehaviour
     protected int patrolIndex = 0;
     protected Vector2 target = Vector3.zero;
 
-    protected float searchTimer = 0.0f;
-    protected float searchDelay = 5.0f;
-
-    protected enum EnemyState { PATROLLING = 0, SEARCHING = 1, ATTACKING = 2, ROOTED = 3};
+    protected enum EnemyState { PATROLLING = 0, ATTACKING = 1, ROOTED = 2};
     protected EnemyState state = EnemyState.PATROLLING;
 
     // Use this for initialization
@@ -55,7 +52,7 @@ public class EnemyScript : MonoBehaviour
             if (hitInfo)
             {
                 //if the player is in sight, start shooting
-                if (hitInfo.collider.tag == "Player")
+                if (hitInfo.collider.tag == "Player" && hitInfo.collider.gameObject.GetComponent<PlayerScript>().IsAlive())
                 {
                     state = EnemyState.ATTACKING;
                     target = hitInfo.transform.position;
@@ -67,7 +64,7 @@ public class EnemyScript : MonoBehaviour
             //if the player isn't in sight, search for them
             if (!playerFound && state == EnemyState.ATTACKING)
             {
-                state = EnemyState.SEARCHING;
+                state = EnemyState.PATROLLING;
                 target = patrolPoints[patrolIndex].position;
             }
         }
@@ -95,34 +92,6 @@ public class EnemyScript : MonoBehaviour
                 }
 
                 animator.SetBool("isMoving", true);
-
-                //update the enemy position
-                direction.Normalize();
-                transform.Translate(direction * maxHorizontalSpeed * Time.deltaTime);
-                transform.rotation = Quaternion.identity;
-                break;
-
-            case EnemyState.SEARCHING:
-
-                //increment the timer
-                if (searchTimer < searchDelay)
-                {
-                    searchTimer += Time.deltaTime;
-                }
-                else
-                {
-                    //return to the patrol state
-                    state = EnemyState.PATROLLING;
-                    target = patrolPoints[patrolIndex].position;
-                    searchTimer = 0.0f;
-                }
-
-                animator.SetBool("isMoving", true);
-
-                if (direction.magnitude < 1.0f)
-                {
-                    target = -direction.normalized * 5.0f;
-                }
 
                 //update the enemy position
                 direction.Normalize();
@@ -169,6 +138,9 @@ public class EnemyScript : MonoBehaviour
         {
             if (bulletSpawnPosition.x < 0.0f) bulletSpawnPosition.x *= -1.0f;
         }
+
+        audio.Play();
+
         GameObject newBullet = (GameObject)GameObject.Instantiate(bulletPrefab, transform.position + (Vector3)bulletSpawnPosition, Quaternion.identity);
         newBullet.rigidbody2D.velocity = (target - (Vector2)transform.position).normalized * bulletVelocity;
     }
@@ -189,5 +161,13 @@ public class EnemyScript : MonoBehaviour
             scale.x *= -1;
             transform.localScale = scale;
         }
+    }
+
+    public void Alert(Vector3 playerPosition)
+    {
+        //face the player and start shooting
+        target = playerPosition;
+        state = EnemyState.ATTACKING;
+        animator.SetBool("isShooting", true);
     }
 }
