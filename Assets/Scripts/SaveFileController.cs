@@ -5,39 +5,61 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Xml;
+using UnityEngine;
 
 class SaveFileController
 {
     private XmlDocument saveFile;
-    private string savePath = "save.sav";
+	private string savePath = @"C:\Users\Frempt\Dropbox\Projects\Alien Invasion\save.sav";
 
     public SaveFileController() 
     {
         saveFile = new XmlDocument();
 
-        try
-        {
-            //try loading the save file
-            saveFile.Load(savePath);
-        }
-        catch (FileNotFoundException e)
-        {
-            //if the save file wasn't found, create a new one
-            XmlElement rootNode = saveFile.CreateElement("Levels");
-            saveFile.AppendChild(rootNode);
+		string saveFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Envious Eyes");
+		if(!Directory.Exists(saveFolder)) Directory.CreateDirectory(saveFolder);
+		savePath = Path.Combine(saveFolder, "save.sav");
 
-            //add the USA levels
-            XmlElement usaNode = saveFile.CreateElement("USA");
-            AddLevelNode(usaNode, "USA1");
-            AddLevelNode(usaNode, "USA2");
-            AddLevelNode(usaNode, "USA3");
+		try
+		{
+			if(File.Exists(savePath))
+	        {
+	            //try loading the save file
+	            saveFile.Load(savePath);
+	        }
+	        else
+	        {
+	            //if the save file wasn't found, create a new one
+	            XmlElement rootNode = saveFile.CreateElement("Levels");
+	            saveFile.AppendChild(rootNode);
 
-            saveFile.DocumentElement.AppendChild(usaNode);
-        }
+	            //add the USA levels
+	            XmlElement usaNode = saveFile.CreateElement(MenuCountryScript.CountryName.USA.ToString());
+	            AddLevelNode(usaNode, "USA1");
+				AddLevelNode(usaNode, "USA2");
+				AddLevelNode(usaNode, "USA3");
+				AddLevelNode(usaNode, "USA4");
+				AddLevelNode(usaNode, "USA5");
+
+	            saveFile.DocumentElement.AppendChild(usaNode);
+
+				//add the Russia levels
+				XmlElement russiaNode = saveFile.CreateElement(MenuCountryScript.CountryName.RUSSIA.ToString());
+				AddLevelNode(russiaNode, "RUSSIA1");
+				AddLevelNode(russiaNode, "RUSSIA2");
+				AddLevelNode(russiaNode, "RUSSIA3");
+				AddLevelNode(russiaNode, "RUSSIA4");
+				AddLevelNode(russiaNode, "RUSSIA5");
+				
+				saveFile.DocumentElement.AppendChild(russiaNode);
+
+				saveFile.Save (savePath);
+        	}
+		}
         catch (Exception e)
         {
             //TODO error with save file
-            Console.WriteLine("Save failed to load" + e.ToString());
+            Console.WriteLine("Save failed to load " + e.ToString());
         }
     }
 
@@ -84,6 +106,58 @@ class SaveFileController
         return null;
     }
 
+	//get the number of levels in the game
+	public int GetNumberOfLevels()
+	{
+		int returnValue = 0;
+
+		//iterate through each level group to find the correct country
+		foreach (XmlNode node in saveFile.DocumentElement.ChildNodes)
+		{
+			returnValue += node.ChildNodes.Count;
+		}
+
+		return returnValue;
+	}
+
+	//get the number of levels in a specified country
+	public int GetNumberOfLevels(MenuCountryScript.CountryName country)
+	{
+		//iterate through each level group to find the correct country
+		foreach (XmlNode node in saveFile.DocumentElement.ChildNodes)
+		{
+			//if this is the correct country
+			if (node.Name == country.ToString())
+			{
+				return node.ChildNodes.Count;
+			}
+		}
+
+		return 0;
+	}
+
+	//return a value between 0.0 and 1.0 based on how many levels are complete in a country
+	public float GetProgress(MenuCountryScript.CountryName country)
+	{
+		int completedLevels = 0;
+
+		//iterate through each level group to find the correct country
+		foreach (XmlNode node in saveFile.DocumentElement.ChildNodes)
+		{
+			//if this is the correct country
+			if (node.Name == country.ToString())
+			{
+				foreach(XmlNode level in node.ChildNodes)
+				{
+					if(IsLevelComplete(country, level.Name)) completedLevels++;
+				}
+				break;
+			}
+		}
+     
+		return ((float)completedLevels / (float)GetNumberOfLevels(country));
+	}
+
     public bool IsLevelComplete(MenuCountryScript.CountryName country, string level)
     {
         //find the correct level
@@ -115,6 +189,9 @@ class SaveFileController
         }
 
         //set the level as complete
-        levelNode.SetAttribute("Compete", "True");
+        levelNode.SetAttribute("Complete", "true");
+
+		//save the file
+		saveFile.Save (savePath);
     }
 }

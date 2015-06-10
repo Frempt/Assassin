@@ -24,8 +24,7 @@ public class DoorScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
 
-            player.atDoor = true;
-            player.proxyDoor = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -35,8 +34,7 @@ public class DoorScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
 
-            player.atDoor = true;
-            player.proxyDoor = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -45,10 +43,9 @@ public class DoorScript : MonoBehaviour
         if (other.tag == "Player")
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
-            if (player.proxyDoor = gameObject)
+            if (player.proxyObject = gameObject)
             {
-                player.atDoor = false;
-                player.proxyDoor = null;
+				player.ProxyObjectExit(gameObject);
             }
         }
     }

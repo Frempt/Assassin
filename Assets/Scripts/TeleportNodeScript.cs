@@ -12,8 +12,9 @@ public class TeleportNodeScript : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            other.GetComponent<PlayerScript>().proxyTeleporter = gameObject;
-            other.GetComponent<PlayerScript>().atTeleporter = true;
+			PlayerScript player = other.GetComponent<PlayerScript>();
+
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -21,8 +22,9 @@ public class TeleportNodeScript : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            other.GetComponent<PlayerScript>().proxyTeleporter = gameObject;
-            other.GetComponent<PlayerScript>().atTeleporter = true;
+			PlayerScript player = other.GetComponent<PlayerScript>();
+
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -31,10 +33,9 @@ public class TeleportNodeScript : MonoBehaviour
         if (other.tag == "Player")
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
-            if (player.proxyTeleporter = gameObject)
+            if (player.proxyObject = gameObject)
             {
-                player.atTeleporter = false;
-                player.proxyTeleporter = null;
+				player.ProxyObjectExit(gameObject);
             }
         }
     }

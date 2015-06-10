@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -14,17 +15,13 @@ public class PlayerScript : MonoBehaviour
     public GameObject cursorPrefab;
     public GameObject grabberPrefab;
 
-    public bool atDoor = false;
-    public bool atLever = false;
-    public bool atGrabPoint = false;
-    public bool atTeleporter = false;
     public TeleportNodeScript.NodeColour teleportColour;
-    public GameObject proxyTeleporter;
     public GameObject selectedTeleporter;
-    public GameObject proxyGrabPoint;
     public GameObject targetedGrabPoint;
-    public GameObject proxyDoor;
-    public GameObject proxyLever;
+
+	public enum ProxyObjectType { NONE = 0, TELEPORTER = 1, GRABPOINT = 2, DOOR = 3, LEVER = 4 };
+	public ProxyObjectType proxyType = ProxyObjectType.NONE;
+	public GameObject proxyObject;
 
     public GameObject mindSeedPrefab;
     public float mindSeedVelocity;
@@ -90,6 +87,10 @@ public class PlayerScript : MonoBehaviour
             UpdateTeleportation();
             UpdateMindSeed();
         }
+		else if(!animState.IsName ("Dying"))
+		{
+			animator.SetBool("isMoving", false);
+		}
 
         //update the animation
         UpdateAnimation();
@@ -208,6 +209,7 @@ public class PlayerScript : MonoBehaviour
     {
         animator.SetBool("isDying", true);
         isRooted = false;
+		CursorScript.RemoveCursors();
         if (rigidbody2D.gravityScale != gravityScale) rigidbody2D.gravityScale = gravityScale;
     }
 
@@ -319,8 +321,8 @@ public class PlayerScript : MonoBehaviour
 
                     selectedTeleporter = null;
 
-                    //TODO: set trail rendered colour to the teleport node's colour
-                    GetComponent<TrailRenderer>().enabled = true;
+					TrailRenderer trail = GetComponent<TrailRenderer>();
+                    trail.enabled = true;
 
                     audio.loop = true;
                     audio.clip = teleportFlyClip;
@@ -385,7 +387,7 @@ public class PlayerScript : MonoBehaviour
         //if not grounded and moving, slow down
         if (!isGrounded && velocity.x != 0.0f)
         {
-            velocity.x *= 0.99f;
+            //velocity.x *= 0.999f;
 
             if (velocity.x < 1.0f && velocity.x > -1.0f)
             {
@@ -400,7 +402,7 @@ public class PlayerScript : MonoBehaviour
         if (Input.GetButtonDown("Action"))
         {
             //if the player is at a teleporter
-            if (atTeleporter && !isHanging)
+            if (proxyType == ProxyObjectType.TELEPORTER && !isHanging)
             {
                 if (!animState.IsName("PhasingOut") && !animState.IsName("PhasingIn"))
                 {
@@ -411,28 +413,28 @@ public class PlayerScript : MonoBehaviour
                     isRooted = true;
                     rigidbody2D.gravityScale = 0.0f;
                     teleporterIndex = 0;
-                    teleportColour = proxyTeleporter.GetComponent<TeleportNodeScript>().colour;
+                    teleportColour = proxyObject.GetComponent<TeleportNodeScript>().colour;
 
                     audio.PlayOneShot(teleportOutClip);
                 }
             }
 
             //if the player is at a door and is grounded
-            else if (atDoor && isGrounded)
+            else if (proxyType == ProxyObjectType.DOOR && isGrounded)
             {
                 //move the player to the door's exit
-                Vector2 newPosition = proxyDoor.GetComponent<DoorScript>().exit.transform.position;
+                Vector2 newPosition = proxyObject.GetComponent<DoorScript>().exit.transform.position;
                 transform.position = newPosition;
             }
 
-            else if (atLever && isGrounded)
+            else if (proxyType == ProxyObjectType.LEVER && isGrounded)
             {
                 //switch the lever
-                proxyLever.GetComponent<LeverScript>().Switch();
+                proxyObject.GetComponent<LeverScript>().Switch();
             }
 
             //if the player is at a grab point and is not grounded
-            else if (atGrabPoint && !isGrounded)
+			else if (proxyType == ProxyObjectType.GRABPOINT && !isGrounded)
             {
                 if (!animState.IsName("PhasingOut") && !animState.IsName("PhasingIn"))
                 {
@@ -471,7 +473,7 @@ public class PlayerScript : MonoBehaviour
                         rigidbody2D.velocity = Vector2.zero;
                         rigidbody2D.gravityScale = 0.0f;
 
-                        grabDestination = proxyGrabPoint;
+                        grabDestination = proxyObject;
 
                         animator.SetBool("isHanging", true);
                         isHanging = true;
@@ -658,9 +660,64 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+	public void SelectNewProxyObject(GameObject newProxy)
+	{
+		//if the current proxy object is null, the new proxy object becomes the current proxy object
+		if (!proxyObject) 
+		{
+			proxyObject = newProxy;
+			CursorScript.CreateNewCursor(proxyObject.transform.position, cursorPrefab);
+		} 
+		else 
+		{
+			float currentDistance = (proxyObject.transform.position - transform.position).magnitude;
+			float newDistance = (newProxy.transform.position - transform.position).magnitude;
+
+			if(currentDistance < newDistance)
+			{
+				proxyObject = newProxy;
+				CursorScript.CreateNewCursor(proxyObject.transform.position, cursorPrefab);
+			}
+		}
+
+		//select the correct type of proxy object
+		switch (proxyObject.tag.ToUpper ()) 
+		{
+			case "DOOR":
+				proxyType = ProxyObjectType.DOOR;
+				break;
+
+			case "LEVER":
+				proxyType = ProxyObjectType.LEVER;
+				break;
+
+			case "TELEPORTER":
+				proxyType = ProxyObjectType.TELEPORTER;
+				break;
+
+			case "GRABPOINT":
+				proxyType = ProxyObjectType.GRABPOINT;
+				break;
+
+			default:
+				proxyType = ProxyObjectType.NONE;
+				break;
+		}
+	}
+
+	public void ProxyObjectExit(GameObject oldProxy)
+	{
+		if(proxyObject == oldProxy)
+		{
+			proxyObject = null;
+			proxyType = ProxyObjectType.NONE;
+			CursorScript.RemoveCursors();
+		}
+	}
+
     public void Jump()
     {
-        //apply vertical 
+        //apply vertical force
         audio.PlayOneShot(jumpClip);
         velocity += new Vector2(0.0f, 20.0f);
 

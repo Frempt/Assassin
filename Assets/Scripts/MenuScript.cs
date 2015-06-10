@@ -7,15 +7,31 @@ public class MenuScript : MonoBehaviour
 
     public GameObject cursorPrefab;
 
+	private Rect windowRect = (new Rect(Screen.width/4, Screen.height/4, Screen.width/2, Screen.height/2));
+
     private MenuCountryScript.CountryName selectedCountry = MenuCountryScript.CountryName.NONE;
     private Vector3 previousMousePosition = Vector2.zero;
 
     private bool showLevelWindow = false;
 
+	private SaveFileController save;
+
 	// Use this for initialization
 	void Start () 
     {
-	
+		save = new SaveFileController ();
+
+		//get the progress the player has made in the USA level group
+		float usaProgress = save.GetProgress (MenuCountryScript.CountryName.USA);
+
+		GameObject usaObj = GameObject.Find ("MenuMapUSA");
+		usaObj.renderer.material.color = new Color ((255 * usaProgress), (255 * (1.0f - usaProgress)), 0.0f);
+
+		//get the progress the player has made in the Russia level group
+		float russiaProgress = save.GetProgress (MenuCountryScript.CountryName.RUSSIA);
+		
+		GameObject russiaObj = GameObject.Find ("MenuMapRussia");
+		russiaObj.renderer.material.color = new Color ((255 * russiaProgress), (255 * (1.0f - russiaProgress)), 0.0f);
 	}
 	
 	// Update is called once per frame
@@ -66,25 +82,6 @@ public class MenuScript : MonoBehaviour
                         CursorScript.CreateNewCursor(countryScript.cursorPoint, cursorPrefab);
                         selectedChanged = false;
                     }
-
-                    //if the mouse has been clicked
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        //open the level selection pop up
-                        switch (selectedCountry)
-                        {
-                            case MenuCountryScript.CountryName.USA:
-                                showLevelWindow = true;
-                                break;
-
-                            case MenuCountryScript.CountryName.RUSSIA:
-                                showLevelWindow = true;
-                                break;
-
-                            default:
-                                break;
-                        }
-                    }
                 }
                 else
                 {
@@ -93,7 +90,39 @@ public class MenuScript : MonoBehaviour
                     selectedCountry = MenuCountryScript.CountryName.NONE;
                 }
             }
+
+			//if the mouse has been clicked
+			if (Input.GetMouseButtonDown(0) && selectedCountry != MenuCountryScript.CountryName.NONE)
+			{
+				//open the level selection pop up
+				switch (selectedCountry)
+				{
+				case MenuCountryScript.CountryName.USA:
+					showLevelWindow = true;
+					break;
+					
+				case MenuCountryScript.CountryName.RUSSIA:
+					showLevelWindow = true;
+					break;
+					
+				default:
+					break;
+				}
+			}
         }
+		else
+		{
+			if(Input.GetMouseButtonDown(0))
+			{
+				if(Input.mousePosition.x > windowRect.x + windowRect.size.x
+				    || Input.mousePosition.x < windowRect.x
+				    || Input.mousePosition.y > windowRect.y + windowRect.size.y
+				    || Input.mousePosition.y < windowRect.y)
+				{
+					showLevelWindow = false;
+				}
+ 			}
+		}
 
         //set the previous mouse position
         previousMousePosition = Input.mousePosition;
@@ -107,33 +136,36 @@ public class MenuScript : MonoBehaviour
         if (showLevelWindow)
         {
             //draw the window
-            Rect windowRect = (new Rect(0, 0, Screen.width, Screen.height));
             GUI.Window(0, windowRect, LevelWindow, "Levels in " + selectedCountry);
         }
-
-        /*if(GUI.Button(new Rect(0, 0, Screen.width / 3, Screen.height), "Level 1"))
-        {
-            Application.LoadLevel("Level01");
-        }
-        if (GUI.Button(new Rect(Screen.width / 3, 0, Screen.width / 3, Screen.height), "Level 2"))
-        {
-            Application.LoadLevel("Level02");
-        }
-        if (GUI.Button(new Rect((Screen.width / 3)*2, 0, Screen.width / 3, Screen.height), "Level 3"))
-        {
-            Application.LoadLevel("Level03");
-        }*/
     }
 
     void LevelWindow(int windowID)
     {
-        //TODO: Set levels based on selected country
-        string[] str = new string[3];
-        str[0] = "Level 01";
-        str[1] = "Level 02";
-        str[2] = "Level 03";
+		//get the save file
+		//SaveFileController save = new SaveFileController ();
 
-        //draw a selection grid and get the selected item
-        int selection = GUI.SelectionGrid(new Rect(0, 0, Screen.width, Screen.height), 0, str, str.Length);
+		//column positions for the level grid
+		float column1Position = windowRect.width / 30;
+		float column2Position = windowRect.width / 3;
+		float column3Position = (windowRect.width / 3) * 2;
+
+		//space between each row for the level grid
+		float rowSpacing = windowRect.height / 10;
+
+		//draw the level grid
+		for(int i = 1; i <= save.GetNumberOfLevels(selectedCountry); i++)
+		{
+			float rowPosition = rowSpacing * i;
+
+			if (GUI.Button (new Rect (column1Position, rowPosition, windowRect.width / 5, windowRect.height / 10), "Level " + i)) 
+			{
+				Application.LoadLevel (selectedCountry.ToString() + i);
+			}
+			
+			GUI.Label (new Rect (column2Position, rowPosition, 400, 100), (save.IsLevelComplete(selectedCountry, selectedCountry.ToString() + i) ? "Complete" : "Incomplete"));
+			
+			GUI.Label (new Rect (column3Position, rowPosition, 400, 100), "Highscore: " + save.GetHighScore(selectedCountry, selectedCountry.ToString() + i));
+		}
     }
 }

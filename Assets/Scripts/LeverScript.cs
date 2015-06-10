@@ -23,6 +23,8 @@ public class LeverScript : MonoBehaviour
     {
         if (collider2D.enabled)
         {
+			GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerScript>().ProxyObjectExit(gameObject);
+
             collider2D.enabled = false;
             animator.SetBool("isSwitched", true);
             pair.GetComponent<BlastDoorScript>().Open();
@@ -35,8 +37,7 @@ public class LeverScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
 
-            player.atLever = true;
-            player.proxyLever = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -46,8 +47,7 @@ public class LeverScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
 
-            player.atLever = true;
-            player.proxyLever = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -56,10 +56,9 @@ public class LeverScript : MonoBehaviour
         if (other.tag == "Player")
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
-            if (player.proxyLever = gameObject)
+            if (player.proxyObject == gameObject)
             {
-                player.atLever = false;
-                player.proxyLever = null;
+				player.ProxyObjectExit(gameObject);
             }
         }
     }

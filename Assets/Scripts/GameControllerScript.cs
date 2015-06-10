@@ -21,6 +21,8 @@ public class GameControllerScript : MonoBehaviour
     private int deaths = 0;
     private int score = 5000;
 
+	public MenuCountryScript.CountryName country;
+
 	// Use this for initialization
 	void Start () 
     {
@@ -96,6 +98,18 @@ public class GameControllerScript : MonoBehaviour
         //set the level to complete
         levelComplete = true;
         player.rigidbody2D.velocity = Vector2.zero;
+		player.GetComponent<Animator>().SetBool("isMoving", false);
+
+		//remove any bullets in the level
+		GameObject[] bullets = GameObject.FindGameObjectsWithTag("Bullet");
+
+		for(int i = 0; i < bullets.Length; i++)
+		{
+			Destroy (bullets[i]);
+		}
+
+		SaveFileController save = new SaveFileController ();
+		save.SetLevelComplete (country, Application.loadedLevelName, score);
     }
 
     public void ResetLevel()
@@ -103,6 +117,7 @@ public class GameControllerScript : MonoBehaviour
         //reset the level
         Destroy(GameObject.FindGameObjectWithTag("Player"));
         player = (GameObject)GameObject.Instantiate(playerPrefab, playerStartPosition, Quaternion.identity);
+		CursorScript.RemoveCursors();
 
         //increment the deaths
         deaths++;

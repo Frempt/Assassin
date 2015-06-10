@@ -11,8 +11,7 @@ public class GrabPointScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
             
-            player.atGrabPoint = true;
-            player.proxyGrabPoint = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -22,8 +21,7 @@ public class GrabPointScript : MonoBehaviour
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
 
-            player.atGrabPoint = true;
-            player.proxyGrabPoint = gameObject;
+			player.SelectNewProxyObject(gameObject);
         }
     }
 
@@ -32,10 +30,9 @@ public class GrabPointScript : MonoBehaviour
         if (other.tag == "Player")
         {
             PlayerScript player = other.GetComponent<PlayerScript>();
-            if (player.proxyGrabPoint = gameObject)
+            if (player.proxyObject = gameObject)
             {
-                player.atGrabPoint = false;
-                player.proxyGrabPoint = null;
+				player.ProxyObjectExit(gameObject);
             }
         }
     }
